@@ -17,7 +17,7 @@
 # if outfile_name is not given, outfile is infile + .tex
 #
 # Serina Hu (github.com/Cathrach)
-# License: The Unlicense
+# License: WTFPL
 #######################################
 
 import re
@@ -38,7 +38,7 @@ def replace_markup_via(text, delims, fun):
         chunks[i] = fun(chunks[i])
     return "".join(chunks)
     
-def convert_to_tex(infile_name, outfile_name, preamble, indent_size):
+def convert_to_tex(infile_name, outfile_name, preamble, indent_size, ignore_properties):
     infile = open(infile_name, "r")
     outfile = open(outfile_name, "w")
     outfile.write(preamble)
@@ -51,11 +51,14 @@ def convert_to_tex(infile_name, outfile_name, preamble, indent_size):
     environments = []
     enum_indents = []
     
-    
     for line in infile:
         # remove indentations and markdown bullets
         indent = len(re.match(r" *", line).group())
         line = re.sub(r"^ *(- )?", "", line)
+        
+        if line.startswith(tuple([f"{s}::" for s in ignore_properties])):
+            continue
+        
         is_section = re.search(r"^#", line) is not None
         if is_section:
             section_indent = indent
@@ -108,7 +111,7 @@ def convert_to_tex(infile_name, outfile_name, preamble, indent_size):
             # replace Roam links
             line = re.sub(r"\[\[(.*?)\]\]", render_citation, line)
             # replace inline links
-            line = re.sub(r"[(.*?)]\((.*)\)", lambda m : f"\\href{{{m.group(2)}}}{{{m.group(1)}}}}", line)
+            line = re.sub(r"[(.*?)]\((.*)\)", lambda m : f"\\href{{{m.group(2)}}}{{{m.group(1)}}}", line)
             
             if indent in enum_indents:
                 line = "\\item " + line
@@ -141,8 +144,9 @@ def main():
     outfile_name = args.outfile if args.outfile is not None else os.path.splitext(infile_name)[0] + ".tex"
     indent_size = args.indent_size
     preamble = args.preamble
+    ignore_properties = ["tags", "do", "due"] #TODO: make this an option
     
-    convert_to_tex(infile_name, outfile_name, preamble, indent_size)
+    convert_to_tex(infile_name, outfile_name, preamble, indent_size, ignore_properties)
     
 if __name__ == "__main__":
     main()
