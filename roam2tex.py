@@ -16,7 +16,8 @@
 # usage: roam2tex.py infile_name [-o outfile_name] [-p preamble] [-i indent_size]
 # if outfile_name is not given, outfile is infile + .tex
 #
-# Serina Hu
+# Serina Hu (github.com/Cathrach)
+# License: The Unlicense
 #######################################
 
 import re
