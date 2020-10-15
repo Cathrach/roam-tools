@@ -42,12 +42,12 @@ def convert_to_tex(infile_name, outfile_name, preamble, indent_size, ignore_prop
     infile = open(infile_name, "r")
     outfile = open(outfile_name, "w")
     outfile.write(preamble)
+    # TODO: make properties additional commands in the preamble
     outfile.write("\\begin{document}")
     # track indent levels for sections and paragraphs
     section_indent = None
     par_indent = None
     # track enumeration
-    
     environments = []
     enum_indents = []
     
@@ -56,9 +56,14 @@ def convert_to_tex(infile_name, outfile_name, preamble, indent_size, ignore_prop
         indent = len(re.match(r" *", line).group())
         line = re.sub(r"^ *(- )?", "", line)
         
+        # skip any lines corresponding to properties we want to ignore
         if line.startswith(tuple([f"{s}::" for s in ignore_properties])):
-            continue
-        
+            line = ""
+
+        # skip any {{ functions
+        line = re.sub(r"^\{\{(.+?)\}\}", "", line)
+            
+        # indentation management
         is_section = re.search(r"^#", line) is not None
         if is_section:
             section_indent = indent
@@ -111,7 +116,7 @@ def convert_to_tex(infile_name, outfile_name, preamble, indent_size, ignore_prop
             # replace Roam links
             line = re.sub(r"\[\[(.*?)\]\]", render_citation, line)
             # replace inline links
-            line = re.sub(r"[(.*?)]\((.*)\)", lambda m : f"\\href{{{m.group(2)}}}{{{m.group(1)}}}", line)
+            line = re.sub(r"\[(.*?)\]\((.*)\)", lambda m : f"\\href{{{m.group(2)}}}{{{m.group(1)}}}", line)
             
             if indent in enum_indents:
                 line = "\\item " + line
